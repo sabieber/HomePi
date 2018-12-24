@@ -1,0 +1,55 @@
+version: "2"
+services:
+  pihole:
+    image: pihole/pihole
+    restart: unless-stopped
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 80:80/tcp
+    environment:
+      TZ: Europe/Berlin
+      ServerIP: 192.168.0.49
+      WEBPASSWORD: 93pi13Hole
+    extra_hosts:
+      - "pihole.guard.space:192.168.0.49"
+    volumes:
+      - "./pihole:/etc/pihole"
+      - "/etc/dnsmasq.d/:/etc/dnsmasq.d/"
+      - "/etc/dnsmasq.d-available/:/etc/dnsmasq.d-available/"
+    dns: 127.0.0.1
+    cap_add:
+    - NET_ADMIN
+  homeassistant:
+    container_name: home-assistant
+    restart: unless-stopped
+    image: homeassistant/raspberrypi3-homeassistant
+    volumes:
+      - "./hass-config:/config"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "./hass_media:/media"
+    network_mode: host
+    privileged: true
+  openhab:
+    container_name: openhab
+    image: "openhab/openhab:2.3.0-armhf-debian"
+    restart: always
+    network_mode: host
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "./openhab/addons:/openhab/addons"
+      - "./openhab/conf:/openhab/conf"
+      - "./openhab/userdata:/openhab/userdata"
+    environment:
+      OPENHAB_HTTP_PORT: "8080"
+      OPENHAB_HTTPS_PORT: "8443"
+      EXTRA_JAVA_OPTS: "-Duser.timezone=Europe/Berlin"
+
+volumes:
+  openhab_addons:
+    driver: local
+  openhab_conf:
+    driver: local
+  openhab_userdata:
+    driver: local
